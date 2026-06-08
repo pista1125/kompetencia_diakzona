@@ -8,7 +8,7 @@
       // This script takes the current URL path and converts it into a redirect
       // to the index page with the path stored in a query parameter.
       // The index page then restores the correct route using sessionStorage.
-      var pathSegmentsToKeep = 0;
+      var pathSegmentsToKeep = window.location.hostname.indexOf('github.io') !== -1 ? 1 : 0;
       var l = window.location;
       l.replace(
         l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +

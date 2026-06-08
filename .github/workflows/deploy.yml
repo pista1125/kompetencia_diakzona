@@ -9,6 +9,10 @@ permissions:
   pages: write
   id-token: write
 
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -16,20 +20,25 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         
-      - name: Setup Bun (or Node)
-        uses: oven-sh/setup-bun@v1
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          bun-version: latest
+          node-version: 20
+          cache: 'npm'
           
       - name: Install Dependencies
-        run: bun install
+        run: npm ci || npm install
         
       - name: Build
-        # Uses the script we defined earlier, or just standard build if config is set
-        run: bun run build:gh 
-        env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+        run: |
+          # If secrets are provided, inject them as env vars; otherwise Vite uses the .env file
+          if [ ! -z "${{ secrets.VITE_SUPABASE_URL }}" ]; then
+            export VITE_SUPABASE_URL="${{ secrets.VITE_SUPABASE_URL }}"
+          fi
+          if [ ! -z "${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}" ]; then
+            export VITE_SUPABASE_PUBLISHABLE_KEY="${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}"
+          fi
+          npm run build
         
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
